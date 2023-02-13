@@ -14,12 +14,12 @@ public abstract class CollectionRequirement : IRequirement
 	public abstract class Handler<T, TCollectionRequirement> : IRequirementHandler<T, TCollectionRequirement>
 		where TCollectionRequirement : CollectionRequirement
 	{
-		private IRequirementEvaluator<T> _executor;
+		private IRequirementEvaluator<T> _evaluator;
 		private bool _requireAll;
 
-		public Handler(IRequirementEvaluator<T> executor, bool requireAll)
+		public Handler(IRequirementEvaluator<T> evaluator, bool requireAll)
 		{
-			_executor = executor;
+			_evaluator = evaluator;
 			_requireAll = requireAll;
 		}
 
@@ -34,7 +34,7 @@ public abstract class CollectionRequirement : IRequirement
 			var results = new List<AuthorizationResult>(requirement.Requirements.Count());
 			foreach (var innerRequirement in requirement.Requirements)
 			{
-				var result = await _executor.Execute(context, innerRequirement, cancellationToken);
+				var result = await _evaluator.Evaluate(context, innerRequirement, cancellationToken);
 				if (!_requireAll && result.IsAuthorized)
 					return result;
 				results.Add(result);

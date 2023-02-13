@@ -1,3 +1,14 @@
+
+
+TODO:
+----
+[ ] Record every evaluated requirement handler into one result
+[ ] Make a base AuthorizationContextFactory(?)
+[ ] Cache reflection operations in RequirementHandlerProvider
+
+
+
+
 ====================
 Requirements deel
 ====================

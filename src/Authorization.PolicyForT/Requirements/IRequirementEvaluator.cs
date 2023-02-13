@@ -2,22 +2,35 @@
 
 public interface IRequirementEvaluator<T>
 {
-    Task<AuthorizationResult> Execute(
-        AuthorizationContext<T> context,
-        IRequirement requirement,
-        CancellationToken cancellationToken);
+    Task<AuthorizationResult> Evaluate(AuthorizationContext<T> context, IRequirement requirement, CancellationToken cancellationToken);
 }
 
 public class RequirementEvaluator<T> : IRequirementEvaluator<T>
 {
-    // TODO
+    private readonly IRequirementHandlerProvider _handlerProvider;
 
-    // I want to request a collection of some kind of object here that
-    // encapsulates the actual call to the handler, making it TRequirement
-    // agnostic. This class only iterates and gets the result objects.
-
-    public Task<AuthorizationResult> Execute(AuthorizationContext<T> context, IRequirement requirement, CancellationToken cancellationToken)
+    public RequirementEvaluator(IRequirementHandlerProvider handlerProvider)
     {
-        throw new NotImplementedException();
+        _handlerProvider = handlerProvider;
+    }
+
+
+    public async Task<AuthorizationResult> Evaluate(AuthorizationContext<T> context, IRequirement requirement, CancellationToken cancellationToken = default)
+    {
+        var handlers = _handlerProvider.GetHandlers<T>(requirement);
+        var results = new List<AuthorizationResult>(handlers.Count());
+
+        foreach (var handler in handlers)
+        {
+            var result = await handler.Invoke(context, requirement, cancellationToken);
+
+            // return when any handler succeeds authorizing
+            if (result.IsAuthorized)
+                return result;
+
+            results.Add(result);
+        }
+
+        return AuthorizationResult.Merge(results);
     }
 }
