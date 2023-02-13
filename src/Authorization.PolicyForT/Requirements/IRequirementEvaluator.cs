@@ -1,4 +1,6 @@
-﻿namespace Authorization.PolicyForT.Requirements;
+﻿using Authorization.PolicyForT.Context;
+
+namespace Authorization.PolicyForT.Requirements;
 
 public interface IRequirementEvaluator<T>
 {

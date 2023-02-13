@@ -2,22 +2,22 @@
 using Authorization.PolicyForT.Requirements;
 using System.Collections.Concurrent;
 
-namespace Authorization.PolicyForT;
+namespace Authorization.PolicyForT.Context;
 
-public class AuthorizationContext<TRequest>
+public class AuthorizationContext<T>
 {
     private readonly ConcurrentDictionary<IRequirement, AuthorizationResult> _checkedRequirements;
 
-    public TRequest Request { get; private set; }
+    public T Tee { get; private set; }
 
     private readonly IPrincipal? _principal;
 
-    public AuthorizationContext(TRequest request)
+    public AuthorizationContext(T tee)
     {
         _checkedRequirements = new();
-        Request = request;
+        Tee = tee;
     }
-    public AuthorizationContext(TRequest request, IPrincipal? principal) : this(request)
+    public AuthorizationContext(T tee, IPrincipal? principal) : this(tee)
     {
         _principal = principal;
     }
@@ -32,7 +32,7 @@ public class AuthorizationContext<TRequest>
         return _principal as TPrincipal
             ?? throw new ArgumentException(
                 $"The user type in the context ({_principal!.GetType().Name}) " +
-                $"mismatches the request user type ({typeof(TPrincipal).Name})");
+                $"mismatches the tee user type ({typeof(TPrincipal).Name})");
     }
 
     public AuthorizationResult Fulfil(IRequirement requirement)
