@@ -5,26 +5,33 @@ namespace Authorization.PolicyForT.Extensions.DependencyInjection;
 
 public static class IServiceCollectionExtensions
 {
-    public static IServiceCollection AddPolicyForT<TBase>(this IServiceCollection services, Assembly assembly)
+    public static IServiceCollection AddPolicyForT<TBase>(this IServiceCollection services, params Assembly[] assemblies)
     {
-        // authcontextfactory<T>, stateless, singleton
-
-
-
-
-        var registrar = new Registrar(new { someOptions = "yes" });
-        //registrar.RegisterBaseTees
-        //registrar.RegisterPolicies
-        //registrar.RegisterRequirementHandlers
-        //etc etc
-
-        // register with TryAdd so we can simply run the command again for
-        // different assemblies and types and prevent duplicates
-        throw new NotImplementedException();
+        return services.AddPolicyForT<TBase>(false, assemblies);
     }
 
-    public static IServiceCollection AddPolicyForT<TBase>(this IServiceCollection services, Assembly assembly, string inNamespace)
+    public static IServiceCollection AddPolicyForT<TBase>(
+        this IServiceCollection services,
+        bool isChain, params Assembly[] assemblies)
     {
-        throw new NotImplementedException();
+        return services.AddPolicyForT(new[] { typeof(TBase) }, isChain, assemblies);
+    }
+
+    public static IServiceCollection AddPolicyForT(
+        this IServiceCollection services,
+        IEnumerable<Type> baseTypesOfT,
+        bool isChain, params Assembly[] assemblies)
+    {
+        if (assemblies.Length == 0)
+            assemblies = new Assembly[] { Assembly.GetCallingAssembly() };
+
+        Registrar.Instance.AddAssemblies(assemblies);
+        foreach(var baseTypeOfT in baseTypesOfT)
+            Registrar.Instance.AddTBase(baseTypeOfT);
+
+        if (!isChain)
+            Registrar.Instance.RegisterWithContainer(services);
+
+        return services;
     }
 }

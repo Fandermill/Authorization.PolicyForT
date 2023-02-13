@@ -1,6 +1,6 @@
 ﻿namespace Authorization.PolicyForT.Context;
 
-public class PerTeeAuthorizationContextFactory : AuthorizationContextFactoryBase
+public class PerTeeAuthorizationContextFactory : DefaultAuthorizationContextFactory
 {
     private readonly IServiceProvider _serviceProvider;
 

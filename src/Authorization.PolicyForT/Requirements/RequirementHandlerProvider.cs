@@ -1,6 +1,6 @@
 ﻿namespace Authorization.PolicyForT.Requirements;
 
-public class RequirementHandlerProvider : IRequirementHandlerProvider
+public sealed class RequirementHandlerProvider : IRequirementHandlerProvider
 {
     private readonly IServiceProvider _serviceProvider;
 

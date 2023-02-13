@@ -3,7 +3,7 @@ using Authorization.PolicyForT.Requirements;
 
 namespace Authorization.PolicyForT;
 
-public class Authorizer<T> : IAuthorizer<T>
+public sealed class Authorizer<T> : IAuthorizer<T>
 {
 	private readonly IAuthorizationContextFactory<T> _contextFactory;
 	private readonly IEnumerable<IPolicy<T>> _policies;

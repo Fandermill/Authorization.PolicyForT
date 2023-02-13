@@ -1,32 +1,199 @@
-﻿using Authorization.PolicyForT.Requirements;
+﻿using Authorization.PolicyForT.Context;
+using Authorization.PolicyForT.Requirements;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace Authorization.PolicyForT.Extensions.DependencyInjection;
 
 internal class Registrar
 {
-    private Assembly[] _assemblies; // todo
 
-    public Registrar(object someOptions)
+    private static object _lock = new object();
+    private static Registrar? _registrar = new Registrar();
+    internal static Registrar Instance => _registrar
+        ?? throw new ObjectDisposedException("The registrar object is already disposed");
+
+
+
+    private HashSet<Assembly> _assemblies = new();
+    private HashSet<Type> _requirementTypes = new();
+    private Dictionary<Type, HashSet<Type>> _teeTypes = new();
+    private Dictionary<Type, HashSet<Type>> _policyTypes = new();
+    private HashSet<Type> _specificAuthorizationContextFactoryTypesForT = new();
+
+    private Registrar()
     {
-        // opties; per tee of global(base) context factory
-        // opties; welke assemblies, welke namespace, welke base type for tee
-
-        // ALWAYS register policyfort assembly itself? .TryAdd
+        _assemblies.Add(typeof(IAuthorizer<>).Assembly);
     }
 
-    private Type[] GetAllRequirementImplementations()
+    internal void AddAssemblies(IEnumerable<Assembly> assemblies)
     {
-        var requirementType = typeof(IRequirement);
-        return GetAllImplementationsOfInterface(requirementType);
+        lock(_lock)
+        {
+            foreach (var assembly in assemblies)
+                _assemblies.Add(assembly);
+        }
     }
 
-    private Type[] GetAllImplementationsOfInterface(Type interfaceType)
+    internal void AddTBase<TBase>() { AddTBase(typeof(TBase)); }
+    internal void AddTBase(Type baseType)
+    {
+        lock (_lock)
+        {
+            if (!_teeTypes.ContainsKey(baseType))
+                _teeTypes.Add(baseType, new HashSet<Type>());
+
+            if (!_policyTypes.ContainsKey(baseType))
+                _policyTypes.Add(baseType, new HashSet<Type>());
+        }
+    }
+
+
+    
+
+    private void DiscoverRequirements()
+    {
+        foreach (var type in GetAllImplementationsOf(typeof(IRequirement)))
+            _requirementTypes.Add(type);
+    }
+
+    private void DiscoverRequirementHandlers()
+    {
+        var requirementHandlerType = typeof(IRequirementHandler<,>); // <T, TRequirement>
+        
+        // todo
+    }
+
+    private void DiscoverTees()
+    {
+        foreach(var baseTypes in _teeTypes.Keys)
+            DiscoverTees(baseTypes);
+    }
+
+    private void DiscoverTees(Type baseType)
+    {
+        foreach (var type in FindAllTeeImplementations(baseType))
+            _teeTypes[baseType].Add(type);
+    }
+
+    private void DiscoverPolicies()
+    {
+        foreach(var teeType in _teeTypes.SelectMany(t => t.Value))
+        {
+            var policyTypes = GetAllImplementationsOf(typeof(IPolicy<>).MakeGenericType(teeType));
+            foreach (var policyType in policyTypes)
+                _policyTypes[teeType].Add(policyType);
+        }
+    }
+
+    private void DiscoverSpecificAuthorizationContextFactoryTypes()
+    {
+        var specificTypes = GetAllImplementationsOf(typeof(IAuthorizationContextFactory<>));
+        foreach (var type in specificTypes)
+            _specificAuthorizationContextFactoryTypesForT.Add(type);
+    }
+
+    internal void RegisterWithContainer(IServiceCollection services)
+    {
+        lock (_lock)
+        {
+            DiscoverRequirements();
+            DiscoverRequirementHandlers();
+            DiscoverTees();
+            DiscoverPolicies();
+
+            DiscoverSpecificAuthorizationContextFactoryTypes();
+        }
+
+        // register requirement handlers
+        // ... todo
+
+        // Register policies
+        //           (what about generic policies?)
+        foreach(var teeType in _policyTypes.Keys)
+        {
+            var policyInterfaceType = typeof(IPolicy<>).MakeGenericType(teeType);
+            foreach (var policyType in _policyTypes[teeType])
+                services.TryAddSingleton(policyInterfaceType, policyType);
+        }
+
+        // more types to register
+        // x AuthoContextFactory
+        // x IRequirementEvaluator
+        // x IRequirementHandlerProvider
+        // x IAuthorizer
+
+
+
+
+        if (_specificAuthorizationContextFactoryTypesForT.Any())
+            services.TryAddSingleton<IAuthorizationContextFactory, DefaultAuthorizationContextFactory>();
+        else
+        {
+            services.TryAddSingleton<IAuthorizationContextFactory, PerTeeAuthorizationContextFactory>();
+            foreach(var specificType in _specificAuthorizationContextFactoryTypesForT)
+            {
+                services.TryAddSingleton(typeof(IAuthorizationContextFactory<>), specificType);
+            }
+        }
+        
+
+
+        services.TryAddSingleton(typeof(IRequirementEvaluator<>), typeof(RequirementEvaluator<>));
+        services.TryAddSingleton<IRequirementHandlerProvider, RequirementHandlerProvider>();
+
+        services.TryAddSingleton(typeof(IAuthorizer<>), typeof(Authorizer<>));
+
+        Dispose();
+    }
+
+    private void Dispose()
+    {
+        lock (_lock)
+        {
+            _registrar = null;
+        }
+    }
+
+
+
+
+
+    /*internal void RegisterGenericPolicy<TGenericPolicy>()
+    {
+        var type = typeof(TGenericPolicy);
+        var interfaceType = typeof(IPolicy<>);
+        if (!type.IsAssignableTo(interfaceType))
+            throw new ArgumentException($"Given type {type.Name} cannot be used as an {interfaceType.Name}");
+
+        _services!.AddSingleton(type, interfaceType);
+    }*/
+
+    internal void RegisterGenericPolicy(Type genericPolicyType)
+    {
+        // services.
+    }
+
+
+
+
+
+
+    private IEnumerable<Type> FindAllTeeImplementations(Type baseType)
+    {
+        if (!baseType.IsInterface && !baseType.IsAbstract)
+            yield return baseType;
+
+        foreach (var type in GetAllImplementationsOf(baseType))
+            yield return type;
+    }
+
+    private Type[] GetAllImplementationsOf(Type interfaceType)
     {
         return _assemblies
             .SelectMany(a => a.GetTypes())
-            .Where(t => 
+            .Where(t =>
                 interfaceType.IsAssignableFrom(t)
                 && !t.IsInterface && !t.IsAbstract)
             .ToArray();
