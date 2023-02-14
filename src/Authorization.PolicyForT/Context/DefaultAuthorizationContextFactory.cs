@@ -2,8 +2,16 @@
 
 public class DefaultAuthorizationContextFactory : IAuthorizationContextFactory
 {
-    public virtual Task<AuthorizationContext<T>> CreateNewContext<T>(T tee)
+    private readonly IPrincipalProvider _principalProvider;
+
+    public DefaultAuthorizationContextFactory(IPrincipalProvider principalProvider)
     {
-        return Task.FromResult(new AuthorizationContext<T>(tee));
+        _principalProvider = principalProvider;
+    }
+
+    public virtual async Task<AuthorizationContext<T>> CreateNewContext<T>(T tee)
+    {
+        var principal = await _principalProvider.GetPrincipal();
+        return new AuthorizationContext<T>(tee, principal);
     }
 }

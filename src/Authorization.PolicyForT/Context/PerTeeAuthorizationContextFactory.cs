@@ -4,7 +4,8 @@ public class PerTeeAuthorizationContextFactory : DefaultAuthorizationContextFact
 {
     private readonly IServiceProvider _serviceProvider;
 
-    public PerTeeAuthorizationContextFactory(IServiceProvider serviceProvider)
+    public PerTeeAuthorizationContextFactory(IPrincipalProvider principalProvider, IServiceProvider serviceProvider)
+        : base(principalProvider)
     {
         _serviceProvider = serviceProvider;
     }

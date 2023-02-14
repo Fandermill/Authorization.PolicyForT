@@ -21,6 +21,7 @@ internal class Registrar
     private Dictionary<Type, HashSet<Type>> _teeTypes = new();
     private Dictionary<Type, HashSet<Type>> _policyTypes = new();
     private HashSet<Type> _specificAuthorizationContextFactoryTypesForT = new();
+    private HashSet<Type> _principalProviderTypes = new();
 
     private Registrar()
     {
@@ -79,7 +80,7 @@ internal class Registrar
 
     private void DiscoverPolicies()
     {
-        foreach(var teeType in _teeTypes.SelectMany(t => t.Value))
+        foreach(var teeType in _teeTypes.SelectMany(t => t.Value)) // !! Ofcourse, this value does not exist as key in _policyTypes
         {
             var policyTypes = GetAllImplementationsOf(typeof(IPolicy<>).MakeGenericType(teeType));
             foreach (var policyType in policyTypes)
@@ -94,6 +95,14 @@ internal class Registrar
             _specificAuthorizationContextFactoryTypesForT.Add(type);
     }
 
+    private void DiscoverPrincipalProviders()
+    {
+        foreach (var type in GetAllImplementationsOf(typeof(IPrincipalProvider)))
+        {
+            _principalProviderTypes.Add(type);
+        }
+    }
+
     internal void RegisterWithContainer(IServiceCollection services)
     {
         lock (_lock)
@@ -104,6 +113,7 @@ internal class Registrar
             DiscoverPolicies();
 
             DiscoverSpecificAuthorizationContextFactoryTypes();
+            DiscoverPrincipalProviders();
         }
 
         // register requirement handlers
@@ -128,22 +138,26 @@ internal class Registrar
 
 
         if (_specificAuthorizationContextFactoryTypesForT.Any())
-            services.TryAddSingleton<IAuthorizationContextFactory, DefaultAuthorizationContextFactory>();
+            services.TryAddScoped<IAuthorizationContextFactory, DefaultAuthorizationContextFactory>();
         else
         {
-            services.TryAddSingleton<IAuthorizationContextFactory, PerTeeAuthorizationContextFactory>();
+            services.TryAddScoped<IAuthorizationContextFactory, PerTeeAuthorizationContextFactory>();
             foreach(var specificType in _specificAuthorizationContextFactoryTypesForT)
             {
-                services.TryAddSingleton(typeof(IAuthorizationContextFactory<>), specificType);
+                services.TryAddScoped(typeof(IAuthorizationContextFactory<>), specificType);
             }
         }
+
+        // todo - could be Tee specific, or partly.(bounded context)
+        foreach(var principalProviderType in _principalProviderTypes)
+            services.TryAddScoped(typeof(IPrincipalProvider), principalProviderType);
         
 
 
         services.TryAddSingleton(typeof(IRequirementEvaluator<>), typeof(RequirementEvaluator<>));
         services.TryAddSingleton<IRequirementHandlerProvider, RequirementHandlerProvider>();
 
-        services.TryAddSingleton(typeof(IAuthorizer<>), typeof(Authorizer<>));
+        services.TryAddScoped(typeof(IAuthorizer<>), typeof(Authorizer<>));
 
         Dispose();
     }

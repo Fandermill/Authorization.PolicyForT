@@ -5,12 +5,12 @@ namespace Authorization.PolicyForT;
 
 public sealed class Authorizer<T> : IAuthorizer<T>
 {
-	private readonly IAuthorizationContextFactory<T> _contextFactory;
+	private readonly IAuthorizationContextFactory _contextFactory;
 	private readonly IEnumerable<IPolicy<T>> _policies;
 	private IRequirementEvaluator<T> _evaluator;
 
 	public Authorizer(
-		IAuthorizationContextFactory<T> contextFactory,
+		IAuthorizationContextFactory contextFactory,
 		IEnumerable<IPolicy<T>> policies,
 		IRequirementEvaluator<T> evaluator)
 	{

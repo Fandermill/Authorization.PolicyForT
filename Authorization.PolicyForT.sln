@@ -11,7 +11,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{343DF909-4
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authorization.PolicyForT.Tests", "test\Authorization.PolicyForT.Tests\Authorization.PolicyForT.Tests.csproj", "{FFDBBB5F-EA4C-4338-8D57-C51DEF874A54}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authorization.PolicyForT.Extensions.DependencyInjection", "src\Authorization.PolicyForT.Extensions.DependencyInjection\Authorization.PolicyForT.Extensions.DependencyInjection.csproj", "{FFB25345-C8B5-4305-898B-1471F78C7812}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authorization.PolicyForT.Extensions.DependencyInjection", "src\Authorization.PolicyForT.Extensions.DependencyInjection\Authorization.PolicyForT.Extensions.DependencyInjection.csproj", "{FFB25345-C8B5-4305-898B-1471F78C7812}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleApp", "examples\SampleApp\SampleApp.csproj", "{4360C73C-5AD3-46E6-99B7-9F5FABEE9645}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{BFA2B67E-4505-40DD-ABAF-B8562A8183EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationLayerLibA", "examples\ApplicationLayerLibA\ApplicationLayerLibA.csproj", "{3963D352-8B15-46ED-A9E7-0BFE7F6CB07D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,6 +37,14 @@ Global
 		{FFB25345-C8B5-4305-898B-1471F78C7812}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFB25345-C8B5-4305-898B-1471F78C7812}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFB25345-C8B5-4305-898B-1471F78C7812}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4360C73C-5AD3-46E6-99B7-9F5FABEE9645}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4360C73C-5AD3-46E6-99B7-9F5FABEE9645}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4360C73C-5AD3-46E6-99B7-9F5FABEE9645}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4360C73C-5AD3-46E6-99B7-9F5FABEE9645}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3963D352-8B15-46ED-A9E7-0BFE7F6CB07D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3963D352-8B15-46ED-A9E7-0BFE7F6CB07D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3963D352-8B15-46ED-A9E7-0BFE7F6CB07D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3963D352-8B15-46ED-A9E7-0BFE7F6CB07D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -39,6 +53,8 @@ Global
 		{DDD4E642-EC7E-49E5-ABBC-9B833B669200} = {2A2122F5-69D5-4491-A8DF-55C275ACA4F8}
 		{FFDBBB5F-EA4C-4338-8D57-C51DEF874A54} = {343DF909-4BAC-4898-BACF-ADDDC0CE37CA}
 		{FFB25345-C8B5-4305-898B-1471F78C7812} = {2A2122F5-69D5-4491-A8DF-55C275ACA4F8}
+		{4360C73C-5AD3-46E6-99B7-9F5FABEE9645} = {BFA2B67E-4505-40DD-ABAF-B8562A8183EB}
+		{3963D352-8B15-46ED-A9E7-0BFE7F6CB07D} = {BFA2B67E-4505-40DD-ABAF-B8562A8183EB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {564BFCCE-5CB7-445F-9FF0-59AA67243992}
