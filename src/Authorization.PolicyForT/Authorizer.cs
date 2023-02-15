@@ -22,7 +22,7 @@ public sealed class Authorizer<T> : IAuthorizer<T>
 	public async Task<AuthorizationResult> Authorize(T tee, CancellationToken cancellationToken)
 	{
 		if (!_policies.Any())
-			return AuthorizationResult.Success();
+			return new AuthorizationResult(true);
 
 		var context = await _contextFactory.CreateNewContext(tee);
 
@@ -31,10 +31,15 @@ public sealed class Authorizer<T> : IAuthorizer<T>
 		{
 			var result = await _evaluator.Evaluate(context, policy.Requirements, cancellationToken);
 
-			if (result.IsAuthorized)
-				return result;
-
 			results.Add(result);
+
+			if (result.IsAuthorized)
+				break;
+        }
+
+		foreach(var checkedRequirement in context.RequirementResults)
+		{
+			System.Diagnostics.Debug.WriteLine(checkedRequirement.ToString());
 		}
 
 		return AuthorizationResult.Merge(results);

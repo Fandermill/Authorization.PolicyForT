@@ -3,7 +3,7 @@ using Authorization.PolicyForT.Context;
 
 namespace Authorization.PolicyForT.Requirements;
 
-public class RequirementHandlerInvoker
+public sealed class RequirementHandlerInvoker
 {
     private object _handler;
     private MethodInfo _method;

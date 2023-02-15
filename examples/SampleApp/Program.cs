@@ -18,5 +18,6 @@ var app = builder.Build();
 app.MapGet("/", () => "Hello World!");
 
 app.MapGet("/create-customer", (IMediator mediator) => mediator.Send(new CreateCustomer.Command { Name = "Test" }));
+app.MapGet("/update-customer", (IMediator mediator) => mediator.Send(new UpdateCustomer.Command { Id = 1, NewName = "Test" }));
 
 app.Run();

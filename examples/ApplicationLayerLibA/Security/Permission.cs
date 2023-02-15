@@ -3,5 +3,6 @@
 internal enum Permission
 {
     None = 0,
-    CanCreateCustomer
+    CanCreateCustomer,
+    CanUpdateCustomer
 }

@@ -1,45 +1,58 @@
-﻿namespace Authorization.PolicyForT;
+﻿using Authorization.PolicyForT.Requirements;
+
+namespace Authorization.PolicyForT;
 
 public sealed class AuthorizationResult
 {
     public bool IsAuthorized { get; private set; }
     public string? Message { get; private set; }
 
-    private AuthorizationResult(bool isAuthorized)
+    internal IRequirement? Requirement { get; private set; }
+
+    private AuthorizationResult(bool isAuthorized, string? message, IRequirement? requirement)
     {
         IsAuthorized = isAuthorized;
-    }
-    private AuthorizationResult(bool isAuthorized, string? message) : this(isAuthorized)
-    {
-        Message = message;
-    }
-
-    public static AuthorizationResult Success()
-    {
-        return new AuthorizationResult(true);
+        if(!string.IsNullOrEmpty(message))
+            Message = message;
+        Requirement = requirement;
     }
 
-    public static AuthorizationResult Fail()
-    {
-        return new AuthorizationResult(false);
-    }
+    public AuthorizationResult(IRequirement requirement, bool isAuthorized) : this(isAuthorized, null, requirement) { }
+    public AuthorizationResult(IRequirement requirement, bool isAuthorized, string? message) : this(isAuthorized, message, requirement) { }
+    public AuthorizationResult(bool isAuthorized) : this(isAuthorized, null, null) { }
+    public AuthorizationResult(bool isAuthorized, string? message) : this(isAuthorized, message, null) { }
 
-    public static AuthorizationResult Fail(string message)
+    public override string ToString()
     {
-        return new AuthorizationResult(false, message);
+        return
+            "Authorization " +
+            (Requirement is not null ? "for requirement " + Requirement.GetType().Name + " " : "") +
+            (IsAuthorized ? "SUCCEEDED" : "failed") +
+            (Message is null ? "" : ": " + Message);
     }
 
     public static AuthorizationResult Merge(IEnumerable<AuthorizationResult> results)
     {
-        if (results.Any(r => r.IsAuthorized))
-            return Success();
+        var authorizedRequirement = results.FirstOrDefault(r => r.IsAuthorized);
+        if (authorizedRequirement is not null)
+            return authorizedRequirement;
 
         var message = string.Join(Environment.NewLine,
             results.Where(r => !r.IsAuthorized && !string.IsNullOrEmpty(r.Message)));
 
-        if (!string.IsNullOrEmpty(message))
-            return Fail(message);
-        else
-            return Fail();
+        return new AuthorizationResult(false, message);
+    }
+}
+
+
+public static class IRequirementExtensions
+{
+    public static AuthorizationResult Succeeded(this IRequirement requirement)
+    {
+        return new AuthorizationResult(requirement, true);
+    }
+    public static AuthorizationResult Failed(this IRequirement requirement, string? message = null)
+    {
+        return new AuthorizationResult(requirement, false, message);
     }
 }

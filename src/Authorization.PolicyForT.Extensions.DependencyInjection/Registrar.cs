@@ -19,6 +19,7 @@ internal class Registrar
     private HashSet<Assembly> _assemblies = new();
     private HashSet<Type> _requirementTypes = new();
     private Dictionary<Type, HashSet<Type>> _teeTypes = new();
+    private Dictionary<Type, HashSet<Type>> _requirementHandlerTypes = new();
     private Dictionary<Type, HashSet<Type>> _policyTypes = new();
     private HashSet<Type> _specificAuthorizationContextFactoryTypesForT = new();
     private HashSet<Type> _principalProviderTypes = new();
@@ -44,9 +45,6 @@ internal class Registrar
         {
             if (!_teeTypes.ContainsKey(baseType))
                 _teeTypes.Add(baseType, new HashSet<Type>());
-
-            if (!_policyTypes.ContainsKey(baseType))
-                _policyTypes.Add(baseType, new HashSet<Type>());
         }
     }
 
@@ -59,12 +57,6 @@ internal class Registrar
             _requirementTypes.Add(type);
     }
 
-    private void DiscoverRequirementHandlers()
-    {
-        var requirementHandlerType = typeof(IRequirementHandler<,>); // <T, TRequirement>
-        
-        // todo
-    }
 
     private void DiscoverTees()
     {
@@ -78,10 +70,31 @@ internal class Registrar
             _teeTypes[baseType].Add(type);
     }
 
+    private void DiscoverRequirementHandlers()
+    {
+        // bah
+
+        var requirementHandlerType = typeof(IRequirementHandler<,>); // <T, TRequirement>
+        foreach(var requirementType in _requirementTypes)
+        {
+            _requirementHandlerTypes.Add(requirementType, new HashSet<Type>());
+
+            foreach (var teeType in _teeTypes.SelectMany(t=>t.Value))
+            {
+                var requirementHandlerPerTeeType = GetAllImplementationsOf(requirementHandlerType.MakeGenericType(teeType, requirementType));
+                foreach (var t in requirementHandlerPerTeeType)
+                    _requirementHandlerTypes[requirementType].Add(t);
+            }
+        }
+    }
+
     private void DiscoverPolicies()
     {
-        foreach(var teeType in _teeTypes.SelectMany(t => t.Value)) // !! Ofcourse, this value does not exist as key in _policyTypes
+        foreach(var teeType in _teeTypes.SelectMany(t=>t.Value))
         {
+            if (!_policyTypes.ContainsKey(teeType))
+                _policyTypes.Add(teeType, new HashSet<Type>());
+
             var policyTypes = GetAllImplementationsOf(typeof(IPolicy<>).MakeGenericType(teeType));
             foreach (var policyType in policyTypes)
                 _policyTypes[teeType].Add(policyType);
@@ -117,7 +130,14 @@ internal class Registrar
         }
 
         // register requirement handlers
-        // ... todo
+        foreach(var requirementHandlerType in _requirementHandlerTypes.SelectMany(r=>r.Value))
+        {
+            services.TryAddSingleton(
+                typeof(IRequirementHandler<,>).MakeGenericType(
+                    requirementHandlerType.GenericTypeArguments[0],
+                    requirementHandlerType.GenericTypeArguments[1]),
+                requirementHandlerType);
+        }
 
         // Register policies
         //           (what about generic policies?)
@@ -127,6 +147,7 @@ internal class Registrar
             foreach (var policyType in _policyTypes[teeType])
                 services.TryAddSingleton(policyInterfaceType, policyType);
         }
+        
 
         // more types to register
         // x AuthoContextFactory
@@ -205,11 +226,10 @@ internal class Registrar
 
     private Type[] GetAllImplementationsOf(Type interfaceType)
     {
-        return _assemblies
-            .SelectMany(a => a.GetTypes())
-            .Where(t =>
+        var assemblyTypes = _assemblies.SelectMany(a => a.GetTypes());
+        var implementations = assemblyTypes.Where(t =>
                 interfaceType.IsAssignableFrom(t)
-                && !t.IsInterface && !t.IsAbstract)
-            .ToArray();
+                && !t.IsInterface && !t.IsAbstract);
+        return implementations.ToArray();
     }
 }

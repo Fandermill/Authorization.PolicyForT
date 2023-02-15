@@ -7,6 +7,7 @@ namespace Authorization.PolicyForT.Context;
 public class AuthorizationContext<T>
 {
     private readonly ConcurrentDictionary<IRequirement, AuthorizationResult> _checkedRequirements;
+    internal IEnumerable<AuthorizationResult> RequirementResults => _checkedRequirements.Values;
 
     public T Tee { get; private set; }
 
@@ -37,17 +38,17 @@ public class AuthorizationContext<T>
 
     public AuthorizationResult Fulfil(IRequirement requirement)
     {
-        return AddRequirementResult(requirement, AuthorizationResult.Success());
+        return AddRequirementResult(requirement, requirement.Succeeded());
     }
 
     public AuthorizationResult Fail(IRequirement requirement)
     {
-        return AddRequirementResult(requirement, AuthorizationResult.Fail());
+        return AddRequirementResult(requirement, requirement.Failed());
     }
 
     public AuthorizationResult Fail(IRequirement requirement, string message)
     {
-        return AddRequirementResult(requirement, AuthorizationResult.Fail(message));
+        return AddRequirementResult(requirement, requirement.Failed(message));
     }
 
     private AuthorizationResult AddRequirementResult(IRequirement requirement, AuthorizationResult result)
