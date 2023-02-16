@@ -120,9 +120,11 @@ internal class Registrar
     {
         lock (_lock)
         {
+            DiscoverTees();
+
             DiscoverRequirements();
             DiscoverRequirementHandlers();
-            DiscoverTees();
+            
             DiscoverPolicies();
 
             DiscoverSpecificAuthorizationContextFactoryTypes();

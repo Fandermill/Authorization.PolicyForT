@@ -26,6 +26,7 @@ public static class IServiceCollectionExtensions
             assemblies = new Assembly[] { Assembly.GetCallingAssembly() };
 
         Registrar.Instance.AddAssemblies(assemblies);
+        Registrar.Instance.AddAssemblies(baseTypesOfT.Select(t => t.Assembly));
         foreach(var baseTypeOfT in baseTypesOfT)
             Registrar.Instance.AddTBase(baseTypeOfT);
 
