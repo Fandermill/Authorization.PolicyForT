@@ -11,14 +11,10 @@ public class ServiceCollectionTests
     public void Can_register_and_resolve_requirement_handlers()
     {
         var services = new ServiceCollection();
-        //services.AddSingleton(
-        //    typeof(IRequirementHandler<,>).MakeGenericType(typeof(ITee), typeof(IRequirement)),
-        //    typeof(RequirementA.Handler<>).MakeGenericType(typeof(ITee)));
 
         services.AddSingleton<
             IRequirementHandler<TestCommand, RequirementA>,
-            RequirementA.Handler<TestCommand>
-            >();
+            RequirementA.Handler<TestCommand>>();
 
         var provider = services.BuildServiceProvider();
 
@@ -38,8 +34,13 @@ public class ServiceCollectionTests
 
         var requiredServiceType = typeof(IRequirementHandler<,>)
             .MakeGenericType(typeof(TestCommand), typeof(RequirementA));
-        var service = provider.GetRequiredService(requiredServiceType);
+        var service1 = provider.GetRequiredService(requiredServiceType);
 
-        Assert.NotNull(service);
+        var requiredGenericHandlerType = typeof(IRequirementHandler<,>)
+            .MakeGenericType(typeof(TestCommand), typeof(AllOfRequirement));
+        var service2 = provider.GetRequiredService(requiredGenericHandlerType);
+
+        Assert.NotNull(service1);
+        Assert.NotNull(service2);
     }
 }

@@ -37,10 +37,10 @@ public static class BuilderExtensions
 	}
 
 
-	public static IRequirement Require<T>(this IRequirementBuilder<T> _, Func<AuthorizationContext<T>, AuthorizationResult> requirement)
-	{
-		// TODO - what about async?
-
-		return new DelegateRequirement<T>(requirement);
-	}
+	//public static IRequirement Require<T>(this IRequirementBuilder<T> _, Func<AuthorizationContext<T>, AuthorizationResult> requirement)
+	//{
+	//	// TODO - what about async?
+	//
+	//	return new DelegateRequirement<T>(requirement);
+	//}
 }

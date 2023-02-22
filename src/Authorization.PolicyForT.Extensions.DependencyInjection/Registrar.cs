@@ -8,21 +8,23 @@ namespace Authorization.PolicyForT.Extensions.DependencyInjection;
 
 internal class Registrar
 {
-
+    #region Singleton instance and disposal
     private static object _lock = new object();
     private static Registrar? _registrar = new Registrar();
     internal static Registrar Instance => _registrar
         ?? throw new ObjectDisposedException("The registrar object is already disposed");
-
-
+    private void Dispose()
+    {
+        lock (_lock)
+        {
+            _registrar = null;
+        }
+    }
+    #endregion
 
     private HashSet<Assembly> _assemblies = new();
     private HashSet<Type> _requirementTypes = new();
-    private Dictionary<Type, HashSet<Type>> _teeTypes = new();
-    private Dictionary<Type, HashSet<Type>> _requirementHandlerTypes = new();
-    private Dictionary<Type, HashSet<Type>> _policyTypes = new();
-    private HashSet<Type> _specificAuthorizationContextFactoryTypesForT = new();
-    private HashSet<Type> _principalProviderTypes = new();
+    private HashSet<Type> _teeTypes = new();
 
     private Registrar()
     {
@@ -31,7 +33,7 @@ internal class Registrar
 
     internal void AddAssemblies(IEnumerable<Assembly> assemblies)
     {
-        lock(_lock)
+        lock (_lock)
         {
             foreach (var assembly in assemblies)
                 _assemblies.Add(assembly);
@@ -39,199 +41,50 @@ internal class Registrar
     }
 
     internal void AddTBase<TBase>() { AddTBase(typeof(TBase)); }
-    internal void AddTBase(Type baseType)
+    internal void AddTBase(Type teeBase)
     {
         lock (_lock)
         {
-            if (!_teeTypes.ContainsKey(baseType))
-                _teeTypes.Add(baseType, new HashSet<Type>());
-        }
-    }
-
-
-    
-
-    private void DiscoverRequirements()
-    {
-        foreach (var type in GetAllImplementationsOf(typeof(IRequirement)))
-            _requirementTypes.Add(type);
-    }
-
-
-    private void DiscoverTees()
-    {
-        foreach(var baseTypes in _teeTypes.Keys)
-            DiscoverTees(baseTypes);
-    }
-
-    private void DiscoverTees(Type baseType)
-    {
-        foreach (var type in FindAllTeeImplementations(baseType))
-            _teeTypes[baseType].Add(type);
-    }
-
-    private void DiscoverRequirementHandlers()
-    {
-        // bah
-
-        var requirementHandlerType = typeof(IRequirementHandler<,>); // <T, TRequirement>
-        foreach(var requirementType in _requirementTypes)
-        {
-            _requirementHandlerTypes.Add(requirementType, new HashSet<Type>());
-
-            foreach (var teeType in _teeTypes.SelectMany(t=>t.Value))
-            {
-                var requirementHandlerPerTeeType = GetAllImplementationsOf(requirementHandlerType.MakeGenericType(teeType, requirementType));
-                foreach (var t in requirementHandlerPerTeeType)
-                    _requirementHandlerTypes[requirementType].Add(t);
-            }
-        }
-    }
-
-    private void DiscoverPolicies()
-    {
-        foreach(var teeType in _teeTypes.SelectMany(t=>t.Value))
-        {
-            if (!_policyTypes.ContainsKey(teeType))
-                _policyTypes.Add(teeType, new HashSet<Type>());
-
-            var policyTypes = GetAllImplementationsOf(typeof(IPolicy<>).MakeGenericType(teeType));
-            foreach (var policyType in policyTypes)
-                _policyTypes[teeType].Add(policyType);
-        }
-    }
-
-    private void DiscoverSpecificAuthorizationContextFactoryTypes()
-    {
-        var specificTypes = GetAllImplementationsOf(typeof(IAuthorizationContextFactory<>));
-        foreach (var type in specificTypes)
-            _specificAuthorizationContextFactoryTypesForT.Add(type);
-    }
-
-    private void DiscoverPrincipalProviders()
-    {
-        foreach (var type in GetAllImplementationsOf(typeof(IPrincipalProvider)))
-        {
-            _principalProviderTypes.Add(type);
+            _teeTypes.Add(teeBase);
         }
     }
 
     internal void RegisterWithContainer(IServiceCollection services)
     {
-        lock (_lock)
+        // TODO - Hebben we de Tee Types eigenlijk wel nodig?
+
+        var discoverer = new ServiceDiscoverer(new TypeCollection(_assemblies.ToArray()), _teeTypes.ToArray());
+
+        foreach (var requirementHandler in discoverer.DiscoverRequirementHandlers())
         {
-            DiscoverTees();
-
-            DiscoverRequirements();
-            DiscoverRequirementHandlers();
-            
-            DiscoverPolicies();
-
-            DiscoverSpecificAuthorizationContextFactoryTypes();
-            DiscoverPrincipalProviders();
+            services.Add(requirementHandler);
         }
 
-        // register requirement handlers
-        foreach(var requirementHandlerType in _requirementHandlerTypes.SelectMany(r=>r.Value))
+        foreach (var policy in discoverer.DiscoverPolicies())
         {
-            services.TryAddSingleton(
-                typeof(IRequirementHandler<,>).MakeGenericType(
-                    requirementHandlerType.GenericTypeArguments[0],
-                    requirementHandlerType.GenericTypeArguments[1]),
-                requirementHandlerType);
+            services.Add(policy);
         }
 
-        // Register policies
-        //           (what about generic policies?)
-        foreach(var teeType in _policyTypes.Keys)
-        {
-            var policyInterfaceType = typeof(IPolicy<>).MakeGenericType(teeType);
-            foreach (var policyType in _policyTypes[teeType])
-                services.TryAddSingleton(policyInterfaceType, policyType);
-        }
-        
-
-        // more types to register
-        // x AuthoContextFactory
-        // x IRequirementEvaluator
-        // x IRequirementHandlerProvider
-        // x IAuthorizer
-
-
-
-
-        if (_specificAuthorizationContextFactoryTypesForT.Any())
-            services.TryAddScoped<IAuthorizationContextFactory, DefaultAuthorizationContextFactory>();
-        else
+        var specificContextFactories = discoverer.DiscoverSpecificContextFactories();
+        if(specificContextFactories.Any())
         {
             services.TryAddScoped<IAuthorizationContextFactory, PerTeeAuthorizationContextFactory>();
-            foreach(var specificType in _specificAuthorizationContextFactoryTypesForT)
-            {
-                services.TryAddScoped(typeof(IAuthorizationContextFactory<>), specificType);
-            }
+            foreach (var specificContextFactory in specificContextFactories)
+                services.Add(specificContextFactory);
+        } else
+        {
+            services.TryAddScoped<IAuthorizationContextFactory, DefaultAuthorizationContextFactory>();
         }
 
-        // todo - could be Tee specific, or partly.(bounded context)
-        foreach(var principalProviderType in _principalProviderTypes)
-            services.TryAddScoped(typeof(IPrincipalProvider), principalProviderType);
-        
+
+        foreach (var principalProvider in discoverer.DiscoverPrincipalProviders())
+        {
+            services.Add(principalProvider);
+        }
 
 
         services.TryAddSingleton(typeof(IRequirementEvaluator<>), typeof(RequirementEvaluator<>));
         services.TryAddSingleton<IRequirementHandlerProvider, RequirementHandlerProvider>();
-
         services.TryAddScoped(typeof(IAuthorizer<>), typeof(Authorizer<>));
-
-        Dispose();
-    }
-
-    private void Dispose()
-    {
-        lock (_lock)
-        {
-            _registrar = null;
-        }
-    }
-
-
-
-
-
-    /*internal void RegisterGenericPolicy<TGenericPolicy>()
-    {
-        var type = typeof(TGenericPolicy);
-        var interfaceType = typeof(IPolicy<>);
-        if (!type.IsAssignableTo(interfaceType))
-            throw new ArgumentException($"Given type {type.Name} cannot be used as an {interfaceType.Name}");
-
-        _services!.AddSingleton(type, interfaceType);
-    }*/
-
-    internal void RegisterGenericPolicy(Type genericPolicyType)
-    {
-        // services.
-    }
-
-
-
-
-
-
-    private IEnumerable<Type> FindAllTeeImplementations(Type baseType)
-    {
-        if (!baseType.IsInterface && !baseType.IsAbstract)
-            yield return baseType;
-
-        foreach (var type in GetAllImplementationsOf(baseType))
-            yield return type;
-    }
-
-    private Type[] GetAllImplementationsOf(Type interfaceType)
-    {
-        var assemblyTypes = _assemblies.SelectMany(a => a.GetTypes());
-        var implementations = assemblyTypes.Where(t =>
-                interfaceType.IsAssignableFrom(t)
-                && !t.IsInterface && !t.IsAbstract);
-        return implementations.ToArray();
     }
 }
