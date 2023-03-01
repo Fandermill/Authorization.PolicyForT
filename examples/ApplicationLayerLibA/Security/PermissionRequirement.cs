@@ -13,7 +13,7 @@ public class PermissionRequirement : IRequirement
         Permissions = permissions;
     }
 
-    public class Handler<T> : IRequirementHandler<T, PermissionRequirement>
+    public class Handler<T> : IRequirementHandler<T, PermissionRequirement> where T : MediatR.IBaseRequest
     {
         public Task<AuthorizationResult> Handle(AuthorizationContext<T> context, PermissionRequirement requirement, CancellationToken cancellationToken)
         {
@@ -22,7 +22,7 @@ public class PermissionRequirement : IRequirement
             else
             {
                 var principalPermissions = context.Principal<LibAUser>().Permissions;
-                var missingPermissions = requirement.Permissions.Where(p => principalPermissions.Contains(p));
+                var missingPermissions = requirement.Permissions.Where(p => !principalPermissions.Contains(p));
                 if (!missingPermissions.Any())
                     result = requirement.Succeeded();
                 else

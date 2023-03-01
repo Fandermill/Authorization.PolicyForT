@@ -23,10 +23,24 @@ public class AuthorizationBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
         var authorizationResult = await _authorizer.Authorize(request, cancellationToken);
         if(authorizationResult.IsAuthorized)
         {
-            _logger.LogInformation("Authorizaed successfully!");
+            _logger.LogInformation("Authorized successfully!");
             return await next();
         }
 
-        throw new Exception("Not authorized!");
+        _logger.LogWarning("Authorization failed: " + authorizationResult.Message);
+        throw new NotAuthorizedException(authorizationResult);
+    }
+}
+
+public class NotAuthorizedException : Exception
+{
+    public AuthorizationResult? AuthorizationResult { get; private set; }
+
+    public NotAuthorizedException() : base() { }
+    public NotAuthorizedException(string message) : base(message) { }
+    public NotAuthorizedException(AuthorizationResult authorizationResult)
+        : this(authorizationResult.Message ?? "Authorization failed")
+    {
+        AuthorizationResult = authorizationResult;
     }
 }

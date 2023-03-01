@@ -38,7 +38,7 @@ public sealed class AuthorizationResult
             return authorizedRequirement;
 
         var message = string.Join(Environment.NewLine,
-            results.Where(r => !r.IsAuthorized && !string.IsNullOrEmpty(r.Message)));
+            results.Where(r => !r.IsAuthorized && !string.IsNullOrEmpty(r.Message)).Select(r => r.Message));
 
         return new AuthorizationResult(false, message);
     }

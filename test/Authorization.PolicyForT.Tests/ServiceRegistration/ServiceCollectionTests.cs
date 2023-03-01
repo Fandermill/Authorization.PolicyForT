@@ -26,6 +26,27 @@ public class ServiceCollectionTests
     }
 
     [Fact]
+    public void Can_register_and_resolve_enumerable_of_requirement_handlers()
+    {
+        var services = new ServiceCollection();
+
+        //new ServiceDescriptor()
+        //services.AddSingleton<
+        //    IRequirementHandler<TestCommand, RequirementA>,
+        //    RequirementA.Handler<TestCommand>>();
+
+        var provider = services.BuildServiceProvider();
+
+        var requiredServiceType = typeof(IRequirementHandler<,>)
+            .MakeGenericType(typeof(TestCommand), typeof(RequirementA));
+
+        var collectionOfHandlersType = typeof(IEnumerable<>).MakeGenericType(requiredServiceType);
+        var service = provider.GetRequiredService(collectionOfHandlersType) as IEnumerable<object>;
+
+        Assert.NotNull(service);
+    }
+
+    [Fact]
     public void Can_use_registrar()
     {
         var services = new ServiceCollection();
@@ -40,7 +61,27 @@ public class ServiceCollectionTests
             .MakeGenericType(typeof(TestCommand), typeof(AllOfRequirement));
         var service2 = provider.GetRequiredService(requiredGenericHandlerType);
 
+
+
+        var collectionOfHandlersType = typeof(IEnumerable<>).MakeGenericType(requiredServiceType);
+        var serviceEnumerable = provider.GetRequiredService(collectionOfHandlersType) as IEnumerable<object>;
+
         Assert.NotNull(service1);
         Assert.NotNull(service2);
+
+        Assert.NotNull(serviceEnumerable);
+    }
+
+    [Fact]
+    public void Can_use_requirement_handler_provider()
+    {
+        var services = new ServiceCollection();
+        services.AddPolicyForT<ITee>();
+        var provider = services.BuildServiceProvider();
+
+        var requirementHandlerProvider = provider.GetRequiredService<IRequirementHandlerProvider>();
+        var handlers = requirementHandlerProvider.GetHandlers<TestCommand>(new RequirementA());
+
+        Assert.Single(handlers);
     }
 }

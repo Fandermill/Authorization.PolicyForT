@@ -35,7 +35,7 @@ internal sealed class ServiceDiscoverer
                 yield return new ServiceDescriptor(
                     GetClosedInterfaceOfType(handlerType, handlerInterfaceType),
                     handlerType,
-                    ServiceLifetime.Scoped);
+                    ServiceLifetime.Singleton);
             }
             else
             {
@@ -52,7 +52,7 @@ internal sealed class ServiceDiscoverer
                     yield return new ServiceDescriptor(
                         handlerInterfaceType.MakeGenericType(teeType, requirementType),
                         handlerType.MakeGenericType(teeType),
-                        ServiceLifetime.Scoped);
+                        ServiceLifetime.Singleton);
                 }
             }
             // is generic type parameter

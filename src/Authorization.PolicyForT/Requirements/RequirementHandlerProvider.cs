@@ -23,9 +23,12 @@ public sealed class RequirementHandlerProvider : IRequirementHandlerProvider
         if (methodInfo is null)
             throw new InvalidOperationException($"There is no handle method on the handler type for requirement {requirementType.Name}");
 
-        var handlers = _serviceProvider.GetService(typeof(IEnumerable<>).MakeGenericType(handlerType)) as IEnumerable<object>;
+        var collectionOfHandlersType = typeof(IEnumerable<>).MakeGenericType(handlerType);
+        System.Diagnostics.Debug.WriteLine($"Requesting handler type: {handlerType} ... and daarvan weer a collection: {collectionOfHandlersType}");
+
+        var handlers = _serviceProvider.GetService(collectionOfHandlersType) as IEnumerable<object>;
         if (handlers is null)
-            throw new InvalidOperationException($"No IAuthorizationHandler found for requirement of type {requirementType.Name}");
+            throw new InvalidOperationException($"No {nameof(IRequirementHandler<T, IRequirement>)} found for requirement of type {requirementType.Name}");
 
         var handlerInvokes = new List<RequirementHandlerInvoker>(handlers.Count());
         foreach (var handler in handlers)

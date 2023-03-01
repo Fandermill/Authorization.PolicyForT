@@ -57,11 +57,13 @@ internal class Registrar
 
         foreach (var requirementHandler in discoverer.DiscoverRequirementHandlers())
         {
+            OutputServiceRegistration(requirementHandler);
             services.Add(requirementHandler);
         }
 
         foreach (var policy in discoverer.DiscoverPolicies())
         {
+            OutputServiceRegistration(policy);
             services.Add(policy);
         }
 
@@ -79,6 +81,7 @@ internal class Registrar
 
         foreach (var principalProvider in discoverer.DiscoverPrincipalProviders())
         {
+            OutputServiceRegistration(principalProvider);
             services.Add(principalProvider);
         }
 
@@ -86,5 +89,11 @@ internal class Registrar
         services.TryAddSingleton(typeof(IRequirementEvaluator<>), typeof(RequirementEvaluator<>));
         services.TryAddSingleton<IRequirementHandlerProvider, RequirementHandlerProvider>();
         services.TryAddScoped(typeof(IAuthorizer<>), typeof(Authorizer<>));
+    }
+
+    private void OutputServiceRegistration(ServiceDescriptor? registration)
+    {
+        if(registration is not null)
+            System.Diagnostics.Debug.WriteLine($"Registered {registration.ImplementationType} as {registration.ServiceType} with lifetime {registration.Lifetime}");
     }
 }
