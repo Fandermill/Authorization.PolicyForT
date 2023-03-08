@@ -1,4 +1,5 @@
 ﻿using Authorization.PolicyForT;
+using Authorization.PolicyForT.Exceptions;
 using MediatR;
 
 namespace SampleApp;
@@ -32,15 +33,3 @@ public class AuthorizationBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
     }
 }
 
-public class NotAuthorizedException : Exception
-{
-    public AuthorizationResult? AuthorizationResult { get; private set; }
-
-    public NotAuthorizedException() : base() { }
-    public NotAuthorizedException(string message) : base(message) { }
-    public NotAuthorizedException(AuthorizationResult authorizationResult)
-        : this(authorizationResult.Message ?? "Authorization failed")
-    {
-        AuthorizationResult = authorizationResult;
-    }
-}

@@ -3,10 +3,10 @@ using Authorization.PolicyForT.Context;
 
 namespace Authorization.PolicyForT.Requirements;
 
-public sealed class RequirementHandlerInvoker
+public sealed class RequirementHandlerInvoker : IRequirementHandlerInvoker
 {
-    private object _handler;
-    private MethodInfo _method;
+    private readonly object _handler;
+    private readonly MethodInfo _method;
 
     internal RequirementHandlerInvoker(object handler, MethodInfo method)
     {
@@ -14,10 +14,17 @@ public sealed class RequirementHandlerInvoker
         _method = method;
     }
 
-    public async Task<AuthorizationResult> Invoke<T>(AuthorizationContext<T> context, IRequirement requirement, CancellationToken cancellationToken = default)
+    public async Task<AuthorizationResult> Invoke<T>(
+        AuthorizationContext<T> context, IRequirement requirement, 
+        CancellationToken cancellationToken = default)
     {
-        var handlerTask = _method.Invoke(_handler, new object[] { context, requirement, cancellationToken }) as Task<AuthorizationResult>;
-        if (handlerTask is null) throw new InvalidOperationException($"Invoked handler did not return a {nameof(Task<AuthorizationResult>)}");
+        var handlerTask = 
+            _method.Invoke(_handler, new object[] { context, requirement, cancellationToken })
+            as Task<AuthorizationResult>;
+
+        if (handlerTask is null) 
+            throw new InvalidOperationException(
+                $"Invoked handler did not return a {nameof(Task<AuthorizationResult>)}");
 
         return await handlerTask;
     }

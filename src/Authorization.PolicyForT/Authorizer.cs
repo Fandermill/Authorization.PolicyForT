@@ -37,6 +37,7 @@ public sealed class Authorizer<T> : IAuthorizer<T>
 				break;
         }
 
+		// TODO - Remove this
 		foreach(var checkedRequirement in context.RequirementResults)
 		{
 			System.Diagnostics.Debug.WriteLine(checkedRequirement.ToString());

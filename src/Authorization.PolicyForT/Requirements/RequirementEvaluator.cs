@@ -14,13 +14,6 @@ public sealed class RequirementEvaluator<T> : IRequirementEvaluator<T>
 
     public async Task<AuthorizationResult> Evaluate(AuthorizationContext<T> context, IRequirement requirement, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var x = _handlerProvider.GetHandlers<T>(requirement);
-        } catch(Exception e)
-        {
-
-        }
         var handlers = _handlerProvider.GetHandlers<T>(requirement);
         var results = new List<AuthorizationResult>(handlers.Count());
 
@@ -28,11 +21,11 @@ public sealed class RequirementEvaluator<T> : IRequirementEvaluator<T>
         {
             var result = await handler.Invoke(context, requirement, cancellationToken);
 
-            // return when any handler succeeds authorizing
-            if (result.IsAuthorized)
-                return result;
-
             results.Add(result);
+
+            // Stop evaluating when any handler succeeds authorizing
+            if (result.IsAuthorized)
+                break;
         }
 
         return AuthorizationResult.Merge(results);

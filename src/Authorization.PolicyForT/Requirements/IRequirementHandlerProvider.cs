@@ -2,5 +2,5 @@
 
 public interface IRequirementHandlerProvider
 {
-    IEnumerable<RequirementHandlerInvoker> GetHandlers<T>(IRequirement requirement);
+    IEnumerable<IRequirementHandlerInvoker> GetHandlers<T>(IRequirement requirement);
 }
