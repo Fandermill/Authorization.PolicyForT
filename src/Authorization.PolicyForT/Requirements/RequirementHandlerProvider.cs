@@ -28,7 +28,7 @@ public sealed class RequirementHandlerProvider : IRequirementHandlerProvider
         System.Diagnostics.Debug.WriteLine($"Requesting handler type: {handlerType} ... and daarvan weer a collection: {collectionOfHandlersType}");
 
         var handlers = _serviceProvider.GetService(collectionOfHandlersType) as IEnumerable<object>;
-        if (handlers is null)
+        if (!(handlers?.Any() ?? false))
             throw new InvalidOperationException(
                 $"No {nameof(IRequirementHandler<T, IRequirement>)} found for requirement of type {requirementType.Name}");
 

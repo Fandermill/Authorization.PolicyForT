@@ -1,6 +1,5 @@
 ﻿using Authorization.PolicyForT.Context;
 using Authorization.PolicyForT.Exceptions;
-using Authorization.PolicyForT.Requirements;
 using Authorization.PolicyForT.Tests.UnitTests.Helpers;
 using FluentAssertions;
 
@@ -48,7 +47,7 @@ public class AuthorizationContextTests
         var tee = new object();
         var context = new AuthorizationContext<object>(tee, new DummyPrincipal());
 
-        var result = context.Fulfil(new DummyRequirement());
+        var result = context.Fulfil(new TestRequirement());
 
         result.IsAuthorized.Should().BeTrue();
     }
@@ -59,11 +58,10 @@ public class AuthorizationContextTests
         var tee = new object();
         var context = new AuthorizationContext<object>(tee, new DummyPrincipal());
 
-        var result = context.Fail(new DummyRequirement(), "Some fail message");
+        var result = context.Fail(new TestRequirement(), "Some fail message");
 
         result.IsAuthorized.Should().BeFalse();
     }
 
-    private class DummyRequirement : IRequirement { }
     private class WrongPrincipal : IPrincipal { }
 }

@@ -8,9 +8,6 @@ namespace Authorization.PolicyForT.Tests.UnitTests.Requirements;
 
 public class RequirementEvaluatorTests
 {
-    private class TestRequirement : IRequirement { }
-    private class Tee { }
-
     [Fact]
     public async Task Evaluating_at_least_one_successfull_handler_results_in_success()
     {
