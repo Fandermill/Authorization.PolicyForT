@@ -37,10 +37,17 @@ public sealed class AuthorizationResult
         if (authorizedRequirement is not null)
             return authorizedRequirement;
 
-        var message = string.Join(Environment.NewLine,
-            results.Where(r => !r.IsAuthorized && !string.IsNullOrEmpty(r.Message)).Select(r => r.Message));
-
+        var message = MergeFailedMessages(results);
         return new AuthorizationResult(false, message);
+    }
+
+    public static string? MergeFailedMessages(IEnumerable<AuthorizationResult> results)
+    {
+        var failedResults = results.Where(r => !r.IsAuthorized);
+        if (!failedResults.Any()) return null;
+
+        return string.Join(Environment.NewLine,
+            failedResults.Where(r => !string.IsNullOrEmpty(r.Message)).Select(r => r.Message));
     }
 }
 

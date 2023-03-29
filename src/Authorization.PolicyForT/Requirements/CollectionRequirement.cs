@@ -42,7 +42,11 @@ public abstract class CollectionRequirement : IRequirement
 				results.Add(result);
 			}
 
-			return AuthorizationResult.Merge(results);
+			var failed = results.Where(r => !r.IsAuthorized);
+			if (_requireAll && failed.Any())
+				return requirement.Failed(AuthorizationResult.MergeFailedMessages(failed));
+			else
+				return AuthorizationResult.Merge(results);
 		}
 	}
 }
