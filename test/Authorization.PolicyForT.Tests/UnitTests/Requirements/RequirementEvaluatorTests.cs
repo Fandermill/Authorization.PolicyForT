@@ -9,7 +9,7 @@ namespace Authorization.PolicyForT.Tests.UnitTests.Requirements;
 public class RequirementEvaluatorTests
 {
     [Fact]
-    public async Task Evaluating_at_least_one_successfull_handler_results_in_success()
+    public async Task Evaluating_at_least_one_successful_handler_results_in_success()
     {
         var requirement = new TestRequirement();
         var failingHandler = new FixedResultRequirementHandlerInvokerSpy(false);

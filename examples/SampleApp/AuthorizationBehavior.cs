@@ -28,7 +28,7 @@ public class AuthorizationBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
             return await next();
         }
 
-        _logger.LogWarning("Authorization failed: " + authorizationResult.Message);
+        _logger.LogWarning("Authorization failed: {message}", authorizationResult.Message);
         throw new NotAuthorizedException(authorizationResult);
     }
 }

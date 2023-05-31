@@ -31,7 +31,7 @@ public abstract class CollectionRequirement : IRequirement
 			CancellationToken cancellationToken)
 		{
 			if (!requirement.Requirements.Any())
-				return requirement.Failed("No requirements in collectino");
+				return requirement.Failed("No requirements in collection");
 
 			var results = new List<AuthorizationResult>(requirement.Requirements.Count());
 			foreach (var innerRequirement in requirement.Requirements)
