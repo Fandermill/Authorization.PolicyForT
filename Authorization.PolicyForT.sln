@@ -13,11 +13,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authorization.PolicyForT.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authorization.PolicyForT.Extensions.DependencyInjection", "src\Authorization.PolicyForT.Extensions.DependencyInjection\Authorization.PolicyForT.Extensions.DependencyInjection.csproj", "{FFB25345-C8B5-4305-898B-1471F78C7812}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleApp", "examples\SampleApp\SampleApp.csproj", "{4360C73C-5AD3-46E6-99B7-9F5FABEE9645}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleApp", "examples\SampleApp\SampleApp.csproj", "{4360C73C-5AD3-46E6-99B7-9F5FABEE9645}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{BFA2B67E-4505-40DD-ABAF-B8562A8183EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationLayerLibA", "examples\ApplicationLayerLibA\ApplicationLayerLibA.csproj", "{3963D352-8B15-46ED-A9E7-0BFE7F6CB07D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationLayerLibA", "examples\ApplicationLayerLibA\ApplicationLayerLibA.csproj", "{3963D352-8B15-46ED-A9E7-0BFE7F6CB07D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02D75F78-BE0D-4F47-8363-B115C1AC7DA4}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
